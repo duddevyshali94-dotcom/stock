@@ -42,17 +42,17 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGc...your-service-role-key
 
 ## 🗄️ Database Schema (Phase 2)
 
-The following tables will be created in Phase 2:
+Run the SQL in `backend/src/db/schema.sql` to create the Phase 2 schema. The core tables include:
 
 ### Users Table
 ```sql
 create table users (
-  id uuid references auth.users primary key,
+  id uuid primary key references auth.users(id) on delete cascade,
   email text unique not null,
-  full_name text,
-  role text default 'user' check (role in ('user', 'admin')),
-  created_at timestamp with time zone default now(),
-  updated_at timestamp with time zone default now()
+  role text not null default 'user' check (role in ('admin', 'user')),
+  virtual_balance numeric(12,2) not null default 10000.00,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now()
 );
 ```
 
@@ -61,111 +61,105 @@ create table users (
 create table stocks (
   id uuid primary key default uuid_generate_v4(),
   symbol text unique not null,
-  name text not null,
-  current_price decimal(10,2),
-  previous_close decimal(10,2),
-  change_percent decimal(5,2),
-  volume bigint,
-  market_cap bigint,
-  last_updated timestamp with time zone default now(),
-  created_at timestamp with time zone default now()
+  company_name text not null,
+  current_price numeric(12,2) not null,
+  last_updated timestamp with time zone not null default now(),
+  daily_change numeric(12,2) not null default 0,
+  daily_change_percent numeric(6,2) not null default 0,
+  is_enabled boolean not null default true,
+  added_by uuid references users(id),
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now()
 );
 ```
 
-### Portfolios Table
+### Portfolio Table
 ```sql
-create table portfolios (
+create table portfolio (
   id uuid primary key default uuid_generate_v4(),
-  user_id uuid references users(id) on delete cascade,
-  name text not null,
-  description text,
-  created_at timestamp with time zone default now(),
-  updated_at timestamp with time zone default now()
-);
-```
-
-### Portfolio Holdings Table
-```sql
-create table portfolio_holdings (
-  id uuid primary key default uuid_generate_v4(),
-  portfolio_id uuid references portfolios(id) on delete cascade,
-  stock_id uuid references stocks(id) on delete cascade,
+  user_id uuid not null references users(id) on delete cascade,
+  stock_id uuid not null references stocks(id) on delete cascade,
   quantity integer not null,
-  purchase_price decimal(10,2) not null,
-  purchase_date timestamp with time zone not null,
-  created_at timestamp with time zone default now(),
-  updated_at timestamp with time zone default now()
+  average_buy_price numeric(12,2) not null,
+  total_invested numeric(12,2) not null,
+  current_value numeric(12,2) not null,
+  profit_loss numeric(12,2) not null,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now(),
+  unique (user_id, stock_id)
 );
 ```
 
-### Stock History Table
+### Transactions Table
 ```sql
-create table stock_history (
+create table transactions (
   id uuid primary key default uuid_generate_v4(),
-  stock_id uuid references stocks(id) on delete cascade,
-  price decimal(10,2) not null,
-  volume bigint,
-  timestamp timestamp with time zone default now()
-);
-```
-
-### Watchlists Table
-```sql
-create table watchlists (
-  id uuid primary key default uuid_generate_v4(),
-  user_id uuid references users(id) on delete cascade,
-  stock_id uuid references stocks(id) on delete cascade,
-  created_at timestamp with time zone default now(),
-  unique(user_id, stock_id)
+  user_id uuid not null references users(id) on delete cascade,
+  stock_id uuid not null references stocks(id) on delete cascade,
+  transaction_type text not null check (transaction_type in ('BUY', 'SELL')),
+  quantity integer not null,
+  price_per_share numeric(12,2) not null,
+  total_amount numeric(12,2) not null,
+  balance_before numeric(12,2) not null,
+  balance_after numeric(12,2) not null,
+  transaction_date timestamp with time zone not null default now(),
+  notes text
 );
 ```
 
 ## 🔒 Row Level Security (RLS)
 
-Enable Row Level Security on all tables in Phase 2:
+Enable Row Level Security and apply the policies from `backend/src/db/schema.sql`:
 
 ```sql
--- Enable RLS
 alter table users enable row level security;
-alter table portfolios enable row level security;
-alter table portfolio_holdings enable row level security;
-alter table watchlists enable row level security;
+alter table stocks enable row level security;
+alter table portfolio enable row level security;
+alter table transactions enable row level security;
 
--- Users can read their own data
-create policy "Users can view own data"
+create policy "Users can view own profile"
   on users for select
   using (auth.uid() = id);
 
--- Users can update their own data
-create policy "Users can update own data"
+create policy "Users can update own profile"
   on users for update
   using (auth.uid() = id);
 
--- Users can view all stocks (public data)
-create policy "Anyone can view stocks"
+create policy "Admins manage users"
+  on users for all
+  using (exists (
+    select 1 from users as u
+    where u.id = auth.uid() and u.role = 'admin'
+  ))
+  with check (exists (
+    select 1 from users as u
+    where u.id = auth.uid() and u.role = 'admin'
+  ));
+
+create policy "Enabled stocks visible to authenticated"
   on stocks for select
-  to authenticated
-  using (true);
+  using (is_enabled = true);
 
--- Users can manage their own portfolios
-create policy "Users can manage own portfolios"
-  on portfolios for all
-  using (auth.uid() = user_id);
+create policy "Admins manage stocks"
+  on stocks for all
+  using (exists (
+    select 1 from users as u
+    where u.id = auth.uid() and u.role = 'admin'
+  ))
+  with check (exists (
+    select 1 from users as u
+    where u.id = auth.uid() and u.role = 'admin'
+  ));
 
--- Users can manage their own portfolio holdings
-create policy "Users can manage own holdings"
-  on portfolio_holdings for all
-  using (
-    auth.uid() = (
-      select user_id from portfolios
-      where id = portfolio_holdings.portfolio_id
-    )
-  );
+create policy "Users manage own portfolio"
+  on portfolio for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
 
--- Users can manage their own watchlists
-create policy "Users can manage own watchlists"
-  on watchlists for all
-  using (auth.uid() = user_id);
+create policy "Users manage own transactions"
+  on transactions for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
 ```
 
 ## 🔐 Authentication Setup
