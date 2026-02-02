@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio | StockPulse</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/user-dashboard.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+    <div class="page">
+        <header class="top-nav">
+            <div class="container nav-content">
+                <a class="nav-brand" href="../index.html">
+                    <img src="../assets/logo.svg" alt="StockPulse logo">
+                    <span>StockPulse</span>
+                </a>
+                <nav class="nav-links">
+                    <a href="user-dashboard.html">Dashboard</a>
+                    <a href="portfolio.html">Portfolio</a>
+                    <a href="transactions.html">Transactions</a>
+                </nav>
+                <div class="nav-actions">
+                    <button class="btn btn-outline" id="logout-button">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="page-content">
+            <div class="container">
+                <section class="grid grid-3" id="portfolio-summary"></section>
+
+                <section class="card" style="margin-top: 2rem;">
+                    <div class="card-header">
+                        <h3 class="card-title">Holdings Breakdown</h3>
+                        <button class="btn btn-outline" id="refresh-portfolio">Refresh</button>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="table" id="portfolio-table">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Company</th>
+                                    <th>Quantity</th>
+                                    <th>Avg Buy Price</th>
+                                    <th>Current Price</th>
+                                    <th>Total Invested</th>
+                                    <th>Current Value</th>
+                                    <th>P&amp;L</th>
+                                    <th>Trend</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="grid grid-2" style="margin-top: 2rem;">
+                    <div class="card">
+                        <h3>Portfolio Composition</h3>
+                        <canvas id="portfolio-chart" height="220"></canvas>
+                    </div>
+                    <div class="card">
+                        <h3>Performance Metrics</h3>
+                        <ul id="performance-metrics" style="display: grid; gap: 0.6rem; margin-top: 1rem;"></ul>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/utils/storage.js"></script>
+    <script src="../js/utils/formatting.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/pages/portfolio.js"></script>
+</body>
+</html>

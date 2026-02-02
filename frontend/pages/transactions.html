@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transactions | StockPulse</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+    <div class="page">
+        <header class="top-nav">
+            <div class="container nav-content">
+                <a class="nav-brand" href="../index.html">
+                    <img src="../assets/logo.svg" alt="StockPulse logo">
+                    <span>StockPulse</span>
+                </a>
+                <nav class="nav-links">
+                    <a href="user-dashboard.html">Dashboard</a>
+                    <a href="portfolio.html">Portfolio</a>
+                    <a href="transactions.html">Transactions</a>
+                </nav>
+                <div class="nav-actions">
+                    <button class="btn btn-outline" id="logout-button">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="page-content">
+            <div class="container">
+                <section class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Transaction History</h3>
+                        <div class="inline-actions">
+                            <select id="filter-type">
+                                <option value="">All Types</option>
+                                <option value="buy">Buy</option>
+                                <option value="sell">Sell</option>
+                            </select>
+                            <input type="text" id="filter-symbol" placeholder="Filter by symbol">
+                            <input type="date" id="filter-start">
+                            <input type="date" id="filter-end">
+                            <button class="btn btn-primary" id="apply-filters">Apply Filters</button>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="table" id="transactions-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Symbol</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Total Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="inline-actions" style="margin-top: 1rem;">
+                        <button class="btn btn-outline" id="export-csv">Export CSV</button>
+                        <button class="btn btn-outline" id="download-statement">Download Statement</button>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/utils/storage.js"></script>
+    <script src="../js/utils/formatting.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/pages/transactions.js"></script>
+</body>
+</html>

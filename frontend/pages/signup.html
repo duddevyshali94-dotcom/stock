@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up | StockPulse</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+    <div class="page">
+        <header class="top-nav">
+            <div class="container nav-content">
+                <a class="nav-brand" href="../index.html">
+                    <img src="../assets/logo.svg" alt="StockPulse logo">
+                    <span>StockPulse</span>
+                </a>
+                <nav class="nav-links">
+                    <a href="login.html">Login</a>
+                    <a href="signup.html">Sign Up</a>
+                </nav>
+            </div>
+        </header>
+
+        <main class="page-content">
+            <div class="container" style="max-width: 520px;">
+                <div class="card">
+                    <h2>Create Your Account</h2>
+                    <p class="helper-text">Choose a role and start trading.</p>
+                    <form id="signup-form">
+                        <div class="form-group">
+                            <label for="signup-email">Email address</label>
+                            <input type="email" id="signup-email" name="email" required placeholder="name@example.com">
+                            <small class="helper-text" id="signup-email-error"></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="signup-password">Password</label>
+                            <input type="password" id="signup-password" name="password" required placeholder="Minimum 8 characters">
+                            <small class="helper-text" id="signup-password-error"></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="signup-confirm">Confirm password</label>
+                            <input type="password" id="signup-confirm" name="confirm" required placeholder="Re-enter password">
+                            <small class="helper-text" id="signup-confirm-error"></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="signup-role">Select role</label>
+                            <select id="signup-role" name="role" required>
+                                <option value="">Select</option>
+                                <option value="admin">Admin</option>
+                                <option value="user">User</option>
+                            </select>
+                            <small class="helper-text" id="signup-role-error"></small>
+                        </div>
+                        <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" id="terms" required>
+                            <label for="terms" style="font-weight: 500;">I accept the terms of service</label>
+                        </div>
+                        <div id="signup-error" class="alert" style="display: none;"></div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Create account</button>
+                    </form>
+                    <p style="margin-top: 1rem;">Already have an account? <a href="login.html">Login</a></p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/utils/storage.js"></script>
+    <script src="../js/utils/validators.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/pages/signup.js"></script>
+</body>
+</html>

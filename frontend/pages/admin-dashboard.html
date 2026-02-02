@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | StockPulse</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/admin-dashboard.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+    <div class="page">
+        <header class="top-nav">
+            <div class="container nav-content">
+                <a class="nav-brand" href="../index.html">
+                    <img src="../assets/logo.svg" alt="StockPulse logo">
+                    <span>StockPulse</span>
+                </a>
+                <nav class="nav-links">
+                    <a href="admin-dashboard.html">Dashboard</a>
+                    <a href="../pages/transactions.html">Transactions</a>
+                    <a href="../pages/portfolio.html">Portfolio</a>
+                </nav>
+                <div class="nav-actions">
+                    <span class="badge">Admin</span>
+                    <button class="btn btn-outline" id="logout-button">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="dashboard-layout">
+            <aside class="sidebar">
+                <div>
+                    <p class="menu-title">Menu</p>
+                </div>
+                <a class="active" href="#dashboard">Dashboard</a>
+                <a href="#stocks">Stocks Management</a>
+                <a href="#users">Users Activity</a>
+                <a href="#stats">Statistics</a>
+                <a href="#settings">Settings</a>
+            </aside>
+
+            <main class="dashboard-main">
+                <section id="dashboard" class="card" style="margin-bottom: 1.5rem;">
+                    <div class="card-header">
+                        <div>
+                            <h2>Admin Dashboard</h2>
+                            <p class="helper-text">Monitor stock listings, user activity, and platform performance.</p>
+                        </div>
+                        <div class="status-pill">Live</div>
+                    </div>
+                    <div class="stats-cards">
+                        <div class="stats-card">
+                            <p class="helper-text">Registered Users</p>
+                            <h3 id="stat-users">1,248</h3>
+                            <span class="tag">+12 today</span>
+                        </div>
+                        <div class="stats-card">
+                            <p class="helper-text">Total Trades</p>
+                            <h3 id="stat-trades">18,450</h3>
+                            <span class="tag">+5.4%</span>
+                        </div>
+                        <div class="stats-card">
+                            <p class="helper-text">Trading Volume</p>
+                            <h3 id="stat-volume">$24.8M</h3>
+                            <span class="tag">Daily</span>
+                        </div>
+                        <div class="stats-card">
+                            <p class="helper-text">Most Traded</p>
+                            <h3 id="stat-top">AAPL</h3>
+                            <span class="tag">Trending</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="stocks" class="card" style="margin-bottom: 1.5rem;">
+                    <div class="card-header">
+                        <h3 class="card-title">Stocks Management</h3>
+                        <button class="btn btn-primary" id="refresh-stocks">Refresh</button>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="table" id="stocks-table">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Company Name</th>
+                                    <th>Current Price</th>
+                                    <th>Daily Change</th>
+                                    <th>% Change</th>
+                                    <th>Last Updated</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div style="margin-top: 1.5rem;">
+                        <h4>Add New Stock</h4>
+                        <form id="add-stock-form" class="form-inline">
+                            <div class="form-group">
+                                <label for="stock-symbol">Symbol</label>
+                                <input type="text" id="stock-symbol" placeholder="AAPL" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="stock-company">Company Name</label>
+                                <input type="text" id="stock-company" placeholder="Apple Inc." required>
+                            </div>
+                            <div class="form-group">
+                                <label for="stock-price">Price</label>
+                                <input type="number" id="stock-price" placeholder="0.00" step="0.01" required>
+                            </div>
+                            <button class="btn btn-secondary" type="button" id="fetch-price">Fetch Price</button>
+                            <button class="btn btn-primary" type="submit">Add Stock</button>
+                        </form>
+                        <div id="add-stock-error" class="alert" style="display: none; margin-top: 0.5rem;"></div>
+                    </div>
+                </section>
+
+                <section id="users" class="card" style="margin-bottom: 1.5rem;">
+                    <div class="card-header">
+                        <h3 class="card-title">Users Activity</h3>
+                        <button class="btn btn-outline" id="refresh-users">Refresh</button>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="table" id="users-table">
+                            <thead>
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Virtual Balance</th>
+                                    <th>Total Trades</th>
+                                    <th>Last Login</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="stats" class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Platform Statistics</h3>
+                        <button class="btn btn-outline" id="refresh-stats">Update</button>
+                    </div>
+                    <div class="grid grid-2">
+                        <div class="card">
+                            <h4>Most Traded Stocks</h4>
+                            <canvas id="most-traded-chart" height="180" aria-label="Most traded stocks chart"></canvas>
+                        </div>
+                        <div class="card">
+                            <h4>Daily Trading Activity</h4>
+                            <canvas id="daily-activity-chart" height="180" aria-label="Daily trading activity chart"></canvas>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <div class="modal" id="stock-modal" aria-hidden="true" role="dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Stock Details</h3>
+                <button class="btn btn-outline" id="close-stock-modal">Close</button>
+            </div>
+            <div class="modal-body" id="stock-modal-body"></div>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/utils/storage.js"></script>
+    <script src="../js/utils/formatting.js"></script>
+    <script src="../js/utils/validators.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/pages/admin-dashboard.js"></script>
+</body>
+</html>
