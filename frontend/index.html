@@ -4,37 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Real-Time Stock Market System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
-    <div id="app">
-        <header>
-            <h1>Real-Time Stock Market System</h1>
-            <nav>
-                <ul>
-                    <li><a href="#home">Home</a></li>
-                    <li><a href="#stocks">Stocks</a></li>
-                    <li><a href="#portfolio">Portfolio</a></li>
-                    <li><a href="#login">Login</a></li>
-                </ul>
-            </nav>
+    <div id="app" class="page">
+        <header class="top-nav">
+            <div class="container nav-content">
+                <a class="nav-brand" href="index.html">
+                    <img src="assets/logo.svg" alt="StockPulse logo">
+                    <span>StockPulse</span>
+                </a>
+                <nav class="nav-links">
+                    <a href="pages/login.html">Login</a>
+                    <a href="pages/signup.html">Sign Up</a>
+                    <a href="pages/user-dashboard.html">User Dashboard</a>
+                    <a href="pages/admin-dashboard.html">Admin Dashboard</a>
+                </nav>
+                <div class="nav-actions">
+                    <span id="system-status" class="status-pill">Checking</span>
+                    <button class="btn btn-primary" id="open-login">Get Started</button>
+                </div>
+            </div>
         </header>
 
-        <main id="main-content">
-            <section id="welcome">
-                <h2>Welcome to the Real-Time Stock Market System</h2>
-                <p>Track stocks, manage your portfolio, and make informed investment decisions.</p>
-                <div id="status-indicator">
-                    <p>System Status: <span id="system-status">Checking...</span></p>
-                </div>
-            </section>
+        <main class="page-content">
+            <div class="container">
+                <section class="welcome-banner card">
+                    <h1>Real-Time Stock Market System</h1>
+                    <p>Track live markets, manage portfolios, and execute trades with confidence. StockPulse delivers a responsive, professional experience for both admins and traders.</p>
+                    <div class="grid grid-3">
+                        <div class="metric">
+                            <span class="helper-text">Live Market Sync</span>
+                            <strong class="value">30s Updates</strong>
+                        </div>
+                        <div class="metric">
+                            <span class="helper-text">Secure Trading</span>
+                            <strong class="value">Role-Based Access</strong>
+                        </div>
+                        <div class="metric">
+                            <span class="helper-text">Portfolio Insights</span>
+                            <strong class="value">Real-Time P&amp;L</strong>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="grid grid-2" style="margin-top: 2rem;">
+                    <div class="card">
+                        <h2>Admin Command Center</h2>
+                        <p>Manage live stocks, monitor user activity, and track platform statistics in one unified dashboard.</p>
+                        <a class="btn btn-primary" href="pages/admin-dashboard.html">Go to Admin Dashboard</a>
+                    </div>
+                    <div class="card">
+                        <h2>Trader Workspace</h2>
+                        <p>Buy and sell stocks, view portfolio performance, and receive real-time price updates instantly.</p>
+                        <a class="btn btn-success" href="pages/user-dashboard.html">Go to User Dashboard</a>
+                    </div>
+                </section>
+            </div>
         </main>
 
-        <footer>
-            <p>&copy; 2024 Real-Time Stock Market System. All rights reserved.</p>
+        <footer class="footer">
+            <p>&copy; 2024 StockPulse. Real-Time Stock Market System.</p>
         </footer>
     </div>
 
+    <script src="js/config.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>

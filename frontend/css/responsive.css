@@ -1,0 +1,63 @@
+@media (max-width: 1024px) {
+    .dashboard-layout {
+        grid-template-columns: 90px 1fr;
+    }
+
+    .sidebar span {
+        display: none;
+    }
+}
+
+@media (max-width: 900px) {
+    .top-nav .nav-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .nav-links {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        flex-direction: row;
+        overflow-x: auto;
+    }
+
+    .dashboard-main {
+        padding: 1.5rem;
+    }
+
+    .page-content {
+        padding: 1.5rem 0 2rem;
+    }
+
+    .form-inline {
+        grid-template-columns: 1fr;
+    }
+
+    .ticker-track {
+        animation-duration: 12s;
+    }
+}
+
+@media (max-width: 600px) {
+    .nav-actions {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .table {
+        font-size: 0.8rem;
+    }
+
+    .modal-content {
+        padding: 1.5rem;
+    }
+}

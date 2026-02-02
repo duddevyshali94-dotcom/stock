@@ -1,31 +1,34 @@
-const API_BASE_URL = 'http://localhost:5000/api';
-
 async function checkSystemHealth() {
     const statusElement = document.getElementById('system-status');
-    
+    if (!statusElement) {
+        return;
+    }
     try {
-        const response = await fetch(`${API_BASE_URL}/health`);
+        const response = await fetch(`${window.APP_CONFIG.API_BASE_URL}/health`);
         const data = await response.json();
-        
+
         if (data.success) {
             statusElement.textContent = 'Online';
-            statusElement.className = 'online';
-            console.log('System health check:', data);
+            statusElement.classList.remove('offline');
         } else {
             statusElement.textContent = 'Error';
-            statusElement.className = 'offline';
+            statusElement.classList.add('offline');
         }
     } catch (error) {
         console.error('Failed to check system health:', error);
         statusElement.textContent = 'Offline';
-        statusElement.className = 'offline';
+        statusElement.classList.add('offline');
     }
 }
 
 function initializeApp() {
-    console.log('Real-Time Stock Market System initialized');
     checkSystemHealth();
-    
+    const button = document.getElementById('open-login');
+    if (button) {
+        button.addEventListener('click', () => {
+            window.location.href = 'pages/login.html';
+        });
+    }
     setInterval(checkSystemHealth, 30000);
 }
 
