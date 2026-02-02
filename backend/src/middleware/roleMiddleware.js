@@ -1,58 +1,28 @@
-const { supabaseAdmin } = require('../config/supabase');
-
-function checkRole(...allowedRoles) {
+/**
+ * Middleware to check user roles for RBAC
+ * @param {Array} allowedRoles - Array of roles allowed to access the route
+ */
+const roleMiddleware = (allowedRoles) => {
   return async (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
     try {
-      if (!req.user) {
-        return res.status(401).json({
-          success: false,
-          error: 'User not authenticated'
-        });
-      }
-      
-      const { data: userProfile, error } = await supabaseAdmin
-        .from('users')
-        .select('role')
-        .eq('id', req.user.id)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching user role:', error);
-        return res.status(500).json({
-          success: false,
-          error: 'Failed to verify user role'
-        });
-      }
-      
-      if (!userProfile) {
-        return res.status(404).json({
-          success: false,
-          error: 'User profile not found'
-        });
-      }
-      
-      const userRole = userProfile.role || 'user';
-      
+      // In Phase 2, we will query the 'profiles' or 'roles' table in the database
+      // For now, we check the user metadata provided by Supabase Auth
+      const userRole = req.user.user_metadata?.role || 'user';
+
       if (!allowedRoles.includes(userRole)) {
-        return res.status(403).json({
-          success: false,
-          error: 'Insufficient permissions'
-        });
+        return res.status(403).json({ message: 'Forbidden: Access denied' });
       }
-      
-      req.userRole = userRole;
-      
+
       next();
-    } catch (error) {
-      console.error('Role check error:', error);
-      return res.status(500).json({
-        success: false,
-        error: 'Role verification failed'
-      });
+    } catch (err) {
+      console.error('Role middleware error:', err.message);
+      return res.status(500).json({ message: 'Internal server error during role verification' });
     }
   };
-}
-
-module.exports = {
-  checkRole
 };
+
+module.exports = roleMiddleware;
