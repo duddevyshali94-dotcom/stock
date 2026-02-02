@@ -1,36 +1,21 @@
-const API_BASE_URL = 'http://localhost:5000/api';
-
-async function checkSystemHealth() {
-    const statusElement = document.getElementById('system-status');
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/health`);
-        const data = await response.json();
-        
-        if (data.success) {
-            statusElement.textContent = 'Online';
-            statusElement.className = 'online';
-            console.log('System health check:', data);
-        } else {
-            statusElement.textContent = 'Error';
-            statusElement.className = 'offline';
-        }
-    } catch (error) {
-        console.error('Failed to check system health:', error);
-        statusElement.textContent = 'Offline';
-        statusElement.className = 'offline';
-    }
-}
-
-function initializeApp() {
+document.addEventListener('DOMContentLoaded', () => {
     console.log('Real-Time Stock Market System initialized');
-    checkSystemHealth();
-    
-    setInterval(checkSystemHealth, 30000);
-}
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeApp);
-} else {
-    initializeApp();
-}
+    const loginBtn = document.getElementById('login-btn');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', () => {
+            console.log('Login button clicked - Redirecting to auth (Phase 2)');
+            alert('Authentication will be implemented in Phase 2.');
+        });
+    }
+
+    // Health check call to backend
+    fetch('http://localhost:5000/api/health')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Backend status:', data.status);
+        })
+        .catch(err => {
+            console.warn('Backend not reachable. Make sure the server is running on port 5000.');
+        });
+});

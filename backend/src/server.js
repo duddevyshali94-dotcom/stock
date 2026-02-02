@@ -5,61 +5,46 @@ const { testConnection } = require('./config/supabase');
 
 const app = express();
 
-const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true,
-  optionsSuccessStatus: 200
-};
-
-app.use(cors(corsOptions));
+// Middleware
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000'
+}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// Logging middleware
 app.use((req, res, next) => {
-  const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] ${req.method} ${req.path}`);
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   next();
 });
 
-app.use(express.static('frontend'));
-
+// Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Server is running',
+  res.status(200).json({
+    status: 'UP',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
   });
 });
 
+// Basic error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(err.status || 500).json({
-    success: false,
-    error: err.message || 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  console.error(err.stack);
+  res.status(500).json({
+    message: 'Internal Server Error',
+    error: process.env.NODE_ENV === 'development' ? err.message : {}
   });
 });
 
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    error: 'Route not found'
-  });
-});
-
-async function startServer() {
+const startServer = async () => {
   const PORT = process.env.PORT || 5000;
   
-  console.log('Starting Real-Time Stock Market System...');
-  console.log('Environment:', process.env.NODE_ENV || 'development');
-  
+  // Test Supabase connection
   await testConnection();
-  
+
   app.listen(PORT, () => {
-    console.log(`✓ Server is running on port ${PORT}`);
-    console.log(`✓ Health check available at http://localhost:${PORT}/api/health`);
+    console.log(`Server is running on port ${PORT}`);
   });
-}
+};
 
 module.exports = { app, startServer };

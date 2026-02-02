@@ -1,37 +1,34 @@
 const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('ERROR: Missing Supabase configuration in environment variables');
-  process.exit(1);
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Missing Supabase configuration. Please check your .env file.');
 }
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-
-async function testConnection() {
+/**
+ * Tests the connection to Supabase.
+ * Since we might not have tables yet, we just try a simple query.
+ */
+const testConnection = async () => {
   try {
-    const { data, error } = await supabase.from('_test_connection').select('*').limit(1);
+    // Attempting to list buckets or a similar metadata action that doesn't require a specific table
+    const { data, error } = await supabase.auth.getSession();
     
-    if (error && error.code !== 'PGRST204' && error.code !== '42P01') {
-      console.warn('Supabase connection warning:', error.message);
+    if (error) {
+        console.warn('Supabase connection test warning:', error.message);
     } else {
-      console.log('✓ Supabase connection established successfully');
+        console.log('Supabase connection initialized successfully.');
     }
-    
-    return true;
   } catch (err) {
-    console.error('✗ Supabase connection failed:', err.message);
-    return false;
+    console.error('Failed to initialize Supabase client:', err.message);
   }
-}
+};
 
 module.exports = {
   supabase,
-  supabaseAdmin,
   testConnection
 };
