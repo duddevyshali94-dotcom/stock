@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const { testConnection } = require('./config/supabase');
+const apiRoutes = require('./routes');
 
 const app = express();
 
@@ -31,6 +32,8 @@ app.get('/api/health', (req, res) => {
     environment: process.env.NODE_ENV || 'development'
   });
 });
+
+app.use('/api', apiRoutes);
 
 app.use((err, req, res, next) => {
   console.error('Error:', err);
