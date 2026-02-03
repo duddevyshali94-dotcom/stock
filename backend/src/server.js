@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const { testConnection } = require('./config/supabase');
+const guidanceRoutes = require('./routes/guidanceRoutes');
 
 const app = express();
 
@@ -22,6 +23,9 @@ app.use((req, res, next) => {
 });
 
 app.use(express.static('frontend'));
+
+// API Routes
+app.use('/api/guidance', guidanceRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({

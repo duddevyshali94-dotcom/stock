@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Investment Guidance - Stock Market System</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guidance.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>
+                <i class="icon-ai"></i>
+                AI Investment Guidance
+            </h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Dashboard</a></li>
+                    <li><a href="portfolio.html">Portfolio</a></li>
+                    <li><a href="guidance.html" class="active">AI Guidance</a></li>
+                    <li><a href="stocks.html">Stocks</a></li>
+                    <li><a href="#" id="logout-btn">Logout</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main id="main-content">
+            <!-- Loading State -->
+            <div id="loading-state" class="loading-container">
+                <div class="loading-spinner"></div>
+                <h3>Analyzing your portfolio...</h3>
+                <p>Our AI is generating personalized investment guidance</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="error-state" class="error-container" style="display: none;">
+                <div class="error-icon">⚠️</div>
+                <h3>Unable to load guidance</h3>
+                <p id="error-message">Something went wrong while generating your guidance</p>
+                <button class="btn btn-primary" id="retry-btn">Try Again</button>
+            </div>
+
+            <!-- Guidance Content -->
+            <div id="guidance-content" class="guidance-container" style="display: none;">
+                
+                <!-- Portfolio Overview Section -->
+                <section class="guidance-section" id="portfolio-overview">
+                    <div class="section-header">
+                        <h2>
+                            <i class="icon-portfolio"></i>
+                            Portfolio Overview
+                        </h2>
+                        <div class="section-actions">
+                            <button class="btn btn-secondary" id="refresh-portfolio">
+                                <i class="icon-refresh"></i>
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="portfolio-summary">
+                        <div class="summary-cards">
+                            <div class="summary-card">
+                                <div class="card-icon">💰</div>
+                                <div class="card-content">
+                                    <h4>Total Value</h4>
+                                    <p class="card-value" id="portfolio-total-value">$0.00</p>
+                                    <span class="card-change" id="portfolio-total-change">--</span>
+                                </div>
+                            </div>
+
+                            <div class="summary-card">
+                                <div class="card-icon">📊</div>
+                                <div class="card-content">
+                                    <h4>Total Gain/Loss</h4>
+                                    <p class="card-value" id="portfolio-gain-loss">$0.00</p>
+                                    <span class="card-change" id="portfolio-gain-loss-percent">--</span>
+                                </div>
+                            </div>
+
+                            <div class="summary-card">
+                                <div class="card-icon">🎯</div>
+                                <div class="card-content">
+                                    <h4>Health Score</h4>
+                                    <p class="card-value" id="health-score">--</p>
+                                    <span class="card-change" id="health-rating">--</span>
+                                </div>
+                            </div>
+
+                            <div class="summary-card">
+                                <div class="card-icon">🔀</div>
+                                <div class="card-content">
+                                    <h4>Diversification</h4>
+                                    <p class="card-value" id="diversification-score">--</p>
+                                    <span class="card-change" id="diversification-rating">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Risk Assessment Section -->
+                <section class="guidance-section" id="risk-assessment">
+                    <div class="section-header">
+                        <h2>
+                            <i class="icon-shield"></i>
+                            Risk Assessment
+                        </h2>
+                    </div>
+
+                    <div class="risk-assessment-content">
+                        <div class="risk-overview">
+                            <div class="risk-meter">
+                                <div class="risk-needle" id="risk-needle"></div>
+                                <div class="risk-labels">
+                                    <span>Low</span>
+                                    <span>Medium</span>
+                                    <span>High</span>
+                                </div>
+                            </div>
+                            <div class="risk-details" id="risk-details">
+                                <!-- Dynamic risk details -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- AI Recommendations Section -->
+                <section class="guidance-section" id="ai-recommendations">
+                    <div class="section-header">
+                        <h2>
+                            <i class="icon-trending-up"></i>
+                            AI Recommendations
+                        </h2>
+                        <div class="section-filters">
+                            <select id="recommendation-filter">
+                                <option value="all">All Recommendations</option>
+                                <option value="buy">Buy Signals</option>
+                                <option value="hold">Hold Positions</option>
+                                <option value="sell">Sell Signals</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="recommendations-grid" id="recommendations-grid">
+                        <!-- Dynamic recommendations -->
+                    </div>
+                </section>
+
+                <!-- Diversification Analysis Section -->
+                <section class="guidance-section" id="diversification-analysis">
+                    <div class="section-header">
+                        <h2>
+                            <i class="icon-pie-chart"></i>
+                            Diversification Analysis
+                        </h2>
+                    </div>
+
+                    <div class="diversification-content">
+                        <div class="diversification-overview">
+                            <div class="diversification-score">
+                                <div class="score-circle">
+                                    <span class="score-value" id="div-score-value">--</span>
+                                    <span class="score-label">Diversification Score</span>
+                                </div>
+                            </div>
+                            <div class="sector-allocation" id="sector-allocation">
+                                <!-- Dynamic sector allocation -->
+                            </div>
+                        </div>
+
+                        <div class="diversification-suggestions" id="diversification-suggestions">
+                            <!-- Dynamic suggestions -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Stock Analysis Section -->
+                <section class="guidance-section" id="stock-analysis">
+                    <div class="section-header">
+                        <h2>
+                            <i class="icon-bar-chart"></i>
+                            Individual Stock Analysis
+                        </h2>
+                        <div class="section-actions">
+                            <input type="text" id="stock-search" placeholder="Search stocks..." class="stock-search">
+                        </div>
+                    </div>
+
+                    <div class="stock-analysis-content">
+                        <div class="stock-selector">
+                            <label for="stock-select">Select stock to analyze:</label>
+                            <select id="stock-select">
+                                <option value="">Choose a stock...</option>
+                            </select>
+                            <button class="btn btn-primary" id="analyze-stock-btn">Analyze</button>
+                        </div>
+
+                        <div class="stock-analysis-result" id="stock-analysis-result" style="display: none;">
+                            <!-- Dynamic stock analysis -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Educational Content Section -->
+                <section class="guidance-section" id="educational-content">
+                    <div class="section-header">
+                        <h2>
+                            <i class="icon-lightbulb"></i>
+                            Learning Center
+                        </h2>
+                        <div class="section-tabs">
+                            <button class="tab-btn active" data-tab="tips">Investment Tips</button>
+                            <button class="tab-btn" data-tab="principles">Principles</button>
+                            <button class="tab-btn" data-tab="market-data">Reading Market Data</button>
+                        </div>
+                    </div>
+
+                    <div class="educational-content">
+                        <div class="tab-content active" id="tips-content">
+                            <div class="tips-grid" id="tips-grid">
+                                <!-- Dynamic tips -->
+                            </div>
+                        </div>
+
+                        <div class="tab-content" id="principles-content">
+                            <div class="principles-list" id="principles-list">
+                                <!-- Dynamic principles -->
+                            </div>
+                        </div>
+
+                        <div class="tab-content" id="market-data-content">
+                            <div class="market-data-guide" id="market-data-guide">
+                                <!-- Dynamic market data guide -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Market Insights Section -->
+                <section class="guidance-section" id="market-insights">
+                    <div class="section-header">
+                        <h2>
+                            <i class="icon-globe"></i>
+                            Market Insights
+                        </h2>
+                    </div>
+
+                    <div class="market-insights-content">
+                        <div class="insights-grid">
+                            <div class="insight-card">
+                                <h4>Market Sentiment</h4>
+                                <div class="insight-value" id="market-sentiment">--</div>
+                                <div class="insight-description">Overall market mood based on AI analysis</div>
+                            </div>
+
+                            <div class="insight-card">
+                                <h4>Top Performing Sectors</h4>
+                                <div class="insight-value" id="top-sectors">--</div>
+                                <div class="insight-description">Sectors with strongest momentum</div>
+                            </div>
+
+                            <div class="insight-card">
+                                <h4>Most Volatile Stocks</h4>
+                                <div class="insight-value" id="volatile-stocks">--</div>
+                                <div class="insight-description">Stocks with highest price swings</div>
+                            </div>
+
+                            <div class="insight-card">
+                                <h4>Trending Up</h4>
+                                <div class="insight-value" id="trending-up">--</div>
+                                <div class="insight-description">Stocks showing upward momentum</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- User Analytics Section -->
+                <section class="guidance-section" id="user-analytics">
+                    <div class="section-header">
+                        <h2>
+                            <i class="icon-user"></i>
+                            Your Trading Analytics
+                        </h2>
+                    </div>
+
+                    <div class="user-analytics-content">
+                        <div class="analytics-grid">
+                            <div class="analytics-card">
+                                <h4>Total Trades</h4>
+                                <div class="analytics-value" id="total-trades">--</div>
+                            </div>
+
+                            <div class="analytics-card">
+                                <h4>Win Rate</h4>
+                                <div class="analytics-value" id="win-rate">--</div>
+                            </div>
+
+                            <div class="analytics-card">
+                                <h4>Average Holding Period</h4>
+                                <div class="analytics-value" id="avg-holding">--</div>
+                            </div>
+
+                            <div class="analytics-card">
+                                <h4>Risk Score</h4>
+                                <div class="analytics-value" id="user-risk-score">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Feedback Section -->
+                <section class="guidance-section" id="feedback-section">
+                    <div class="section-header">
+                        <h2>
+                            <i class="icon-message"></i>
+                            Help Us Improve
+                        </h2>
+                    </div>
+
+                    <div class="feedback-content">
+                        <p>Your feedback helps us improve our AI guidance. How was your experience?</p>
+                        
+                        <div class="feedback-rating">
+                            <label>Rate the guidance quality:</label>
+                            <div class="rating-stars" id="guidance-rating">
+                                <span class="star" data-value="1">★</span>
+                                <span class="star" data-value="2">★</span>
+                                <span class="star" data-value="3">★</span>
+                                <span class="star" data-value="4">★</span>
+                                <span class="star" data-value="5">★</span>
+                            </div>
+                        </div>
+
+                        <div class="feedback-form">
+                            <label for="feedback-comments">Additional comments:</label>
+                            <textarea id="feedback-comments" placeholder="Tell us what worked well or how we can improve..."></textarea>
+                        </div>
+
+                        <div class="feedback-actions">
+                            <button class="btn btn-primary" id="submit-feedback-btn">Submit Feedback</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 AI Investment Guidance System. Powered by advanced AI analysis.</p>
+        </footer>
+    </div>
+
+    <!-- Stock Analysis Modal -->
+    <div id="stock-analysis-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-stock-symbol">Stock Analysis</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-stock-analysis">
+                <!-- Dynamic stock analysis content -->
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/components/guidancePanel.js"></script>
+    <script src="js/pages/guidance.js"></script>
+</body>
+</html>
