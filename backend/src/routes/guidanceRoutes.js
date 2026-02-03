@@ -1,8 +1,8 @@
 const express = require('express');
 const aiGuidanceService = require('../services/aiGuidanceService');
 const analyticsService = require('../services/analyticsService');
-const { authenticateToken } = require('../middleware/authMiddleware');
-const { requireRole } = require('../middleware/roleMiddleware');
+const { authenticateUser } = require('../middleware/authMiddleware');
+const { checkRole } = require('../middleware/roleMiddleware');
 const logger = require('../utils/logger');
 const healthChecker = require('../utils/healthCheck');
 
@@ -12,7 +12,7 @@ const router = express.Router();
  * GET /api/guidance/portfolio
  * Get overall portfolio guidance for authenticated user
  */
-router.get('/portfolio', authenticateToken, async (req, res) => {
+router.get('/portfolio', authenticateUser, async (req, res) => {
     const startTime = Date.now();
     
     try {
@@ -62,7 +62,7 @@ router.get('/portfolio', authenticateToken, async (req, res) => {
  * GET /api/guidance/stock/:symbol
  * Get guidance for specific stock
  */
-router.get('/stock/:symbol', authenticateToken, async (req, res) => {
+router.get('/stock/:symbol', authenticateUser, async (req, res) => {
     const startTime = Date.now();
     const { symbol } = req.params;
     
@@ -293,7 +293,7 @@ router.get('/beginner-tips', async (req, res) => {
  * POST /api/guidance/feedback
  * Record user feedback on guidance quality
  */
-router.post('/feedback', authenticateToken, async (req, res) => {
+router.post('/feedback', authenticateUser, async (req, res) => {
     const startTime = Date.now();
     const { recommendation_type, helpful, acted_upon, successful, rating, comments } = req.body;
     
@@ -378,7 +378,7 @@ router.post('/feedback', authenticateToken, async (req, res) => {
  * GET /api/guidance/dashboard
  * Get all guidance information for dashboard
  */
-router.get('/dashboard', authenticateToken, async (req, res) => {
+router.get('/dashboard', authenticateUser, async (req, res) => {
     const startTime = Date.now();
     
     try {
@@ -442,7 +442,7 @@ router.get('/dashboard', authenticateToken, async (req, res) => {
  * GET /api/guidance/analytics
  * Get guidance analytics (admin only)
  */
-router.get('/analytics', authenticateToken, requireRole(['admin']), async (req, res) => {
+router.get('/analytics', authenticateUser, checkRole(['admin']), async (req, res) => {
     const startTime = Date.now();
     
     try {
