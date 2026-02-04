@@ -1,12 +1,11 @@
-const axios = require('axios');
 const { supabase } = require('../config/supabase');
 const { calculateMovingAverage, calculateRSI, calculateBollingerBands, identifyTrend, calculateVolatility } = require('./priceAnalysisService');
 const { analyzePortfolio, calculateRiskMetrics } = require('./portfolioAnalysisService');
+const { fetchChart } = require('./yahooFinanceService');
 
 class AIGuidanceService {
     constructor() {
-        this.apiKey = process.env.ALPHA_VANTAGE_API_KEY || 'demo';
-        this.baseUrl = 'https://www.alphavantage.co/query';
+        this.dataProvider = 'yahoo-finance';
     }
 
     /**
@@ -488,21 +487,16 @@ class AIGuidanceService {
      */
     async getStockPriceData(symbol) {
         try {
-            // For demo purposes, return mock data
-            // In production, integrate with real API like Alpha Vantage
-            const mockData = {
-                prices: Array.from({ length: 30 }, (_, i) => ({
-                    date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                    open: (100 + Math.random() * 20).toFixed(2),
-                    high: (110 + Math.random() * 30).toFixed(2),
-                    low: (90 + Math.random() * 10).toFixed(2),
-                    close: (100 + Math.random() * 25).toFixed(2),
-                    volume: Math.floor(Math.random() * 1000000)
-                }))
+            const prices = await fetchChart(symbol, '1mo', '1d');
+            if (!prices || prices.length === 0) {
+                return null;
+            }
+
+            return {
+                provider: this.dataProvider,
+                symbol: symbol.toUpperCase(),
+                prices
             };
-
-            return mockData;
-
         } catch (error) {
             console.error('Error fetching stock price data:', error);
             return null;

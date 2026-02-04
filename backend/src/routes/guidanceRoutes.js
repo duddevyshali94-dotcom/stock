@@ -5,6 +5,7 @@ const { authenticateUser } = require('../middleware/authMiddleware');
 const { checkRole } = require('../middleware/roleMiddleware');
 const logger = require('../utils/logger');
 const healthChecker = require('../utils/healthCheck');
+const { supabase } = require('../config/supabase');
 
 const router = express.Router();
 

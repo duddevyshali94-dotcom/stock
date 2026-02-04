@@ -3,38 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time Stock Market System</title>
+    <title>Real-Time Stock Market System with Admin Control</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
     <div id="app">
         <header>
-            <h1>Real-Time Stock Market System</h1>
+            <div class="header-top">
+                <h1>Real-Time Stock Market System with Admin Control and Intelligent Guidance</h1>
+                <button id="logout-btn" class="ghost-btn hidden">Logout</button>
+            </div>
             <nav>
                 <ul>
                     <li><a href="#home">Home</a></li>
-                    <li><a href="#stocks">Stocks</a></li>
+                    <li><a href="#auth">Login</a></li>
+                    <li><a href="#dashboard">Dashboard</a></li>
                     <li><a href="#portfolio">Portfolio</a></li>
-                    <li><a href="#login">Login</a></li>
+                    <li><a href="#admin">Admin</a></li>
                 </ul>
             </nav>
         </header>
 
         <main id="main-content">
-            <section id="welcome">
-                <h2>Welcome to the Real-Time Stock Market System</h2>
-                <p>Track stocks, manage your portfolio, and make informed investment decisions.</p>
-                <div id="status-indicator">
-                    <p>System Status: <span id="system-status">Checking...</span></p>
+            <section id="home" class="panel">
+                <div class="hero">
+                    <div>
+                        <h2>Learn the market with real-time data and virtual money.</h2>
+                        <p>
+                            This educational platform uses live Yahoo Finance prices, Supabase authentication,
+                            and AI guidance to help beginner investors practice responsibly.
+                        </p>
+                        <div class="hero-actions">
+                            <button class="primary-btn" data-nav="#auth">Get Started</button>
+                            <button class="secondary-btn" data-nav="#dashboard">View Dashboard</button>
+                        </div>
+                    </div>
+                    <div class="hero-card">
+                        <h3>System Status</h3>
+                        <p class="status-line">API: <span id="system-status">Checking...</span></p>
+                        <p class="status-line">Price Feed: <span id="price-status">Waiting...</span></p>
+                        <p class="helper-text">Prices refresh every 20 seconds.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="auth" class="panel">
+                <h2>Login or Create an Account</h2>
+                <div class="auth-grid">
+                    <form id="login-form" class="card">
+                        <h3>Login</h3>
+                        <label>Email <input type="email" name="email" required></label>
+                        <label>Password <input type="password" name="password" required></label>
+                        <button type="submit" class="primary-btn">Login</button>
+                        <p class="helper-text">Admin accounts must already exist in Supabase.</p>
+                    </form>
+                    <form id="signup-form" class="card">
+                        <h3>Sign Up</h3>
+                        <label>Email <input type="email" name="email" required></label>
+                        <label>Password <input type="password" name="password" required minlength="6"></label>
+                        <button type="submit" class="secondary-btn">Create Account</button>
+                        <p class="helper-text">New users start with $100,000 in virtual cash.</p>
+                    </form>
+                </div>
+            </section>
+
+            <section id="dashboard" class="panel hidden">
+                <div class="panel-header">
+                    <h2>User Trading Dashboard</h2>
+                    <div class="pill" id="role-pill">Role: --</div>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <h3>Wallet</h3>
+                        <p class="balance" id="wallet-balance">$0.00</p>
+                        <p class="helper-text">Virtual money only. Not connected to real funds.</p>
+                    </div>
+                    <div class="card">
+                        <h3>AI Guidance</h3>
+                        <div id="guidance-summary">
+                            <p>Loading guidance...</p>
+                        </div>
+                        <p class="helper-text">Informational only, not financial advice.</p>
+                    </div>
+                </div>
+                <div class="card table-card">
+                    <div class="table-header">
+                        <h3>Admin-Approved Stocks</h3>
+                        <button class="ghost-btn" id="refresh-stocks">Refresh</button>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Name</th>
+                                    <th>Price</th>
+                                    <th>Change</th>
+                                    <th>Trade</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stocks-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="portfolio" class="panel hidden">
+                <h2>Portfolio &amp; Transactions</h2>
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <h3>Total Value</h3>
+                        <p class="balance" id="portfolio-value">$0.00</p>
+                        <p class="helper-text">Live value based on real Yahoo Finance prices.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Total Gain/Loss</h3>
+                        <p class="balance" id="portfolio-gain">$0.00</p>
+                        <p class="helper-text">Updated every refresh cycle.</p>
+                    </div>
+                </div>
+                <div class="card table-card">
+                    <div class="table-header">
+                        <h3>Holdings</h3>
+                        <button class="ghost-btn" id="refresh-portfolio">Refresh</button>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Shares</th>
+                                    <th>Avg Price</th>
+                                    <th>Market Price</th>
+                                    <th>Gain/Loss</th>
+                                </tr>
+                            </thead>
+                            <tbody id="holdings-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="admin" class="panel hidden">
+                <div class="panel-header">
+                    <h2>Admin Control Center</h2>
+                    <div class="pill admin-pill">Admin Only</div>
+                </div>
+                <div class="admin-grid">
+                    <form id="add-stock-form" class="card">
+                        <h3>Add Stock Symbol</h3>
+                        <label>Symbol <input type="text" name="symbol" required></label>
+                        <label>Name <input type="text" name="name" placeholder="Company name"></label>
+                        <button type="submit" class="primary-btn">Add Stock</button>
+                        <p class="helper-text">Example: AAPL, TCS, INFY, RELIANCE.</p>
+                    </form>
+                    <div class="card">
+                        <h3>User Activity (Read-Only)</h3>
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Symbol</th>
+                                        <th>Side</th>
+                                        <th>Qty</th>
+                                        <th>Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="activity-table"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="card table-card">
+                    <div class="table-header">
+                        <h3>Stock Visibility</h3>
+                        <button class="ghost-btn" id="refresh-admin-stocks">Refresh</button>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Name</th>
+                                    <th>Visible</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-stocks-table"></tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
         </main>
 
         <footer>
-            <p>&copy; 2024 Real-Time Stock Market System. All rights reserved.</p>
+            <p>&copy; 2024 Real-Time Stock Market System. Educational use only.</p>
         </footer>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.js"></script>
+    <script>
+        window.APP_CONFIG = {
+            SUPABASE_URL: 'YOUR_SUPABASE_URL',
+            SUPABASE_ANON_KEY: 'YOUR_SUPABASE_ANON_KEY',
+            API_BASE_URL: 'http://localhost:5000/api'
+        };
+    </script>
     <script src="js/main.js"></script>
 </body>
 </html>

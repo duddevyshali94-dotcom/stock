@@ -3,6 +3,9 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const { testConnection } = require('./config/supabase');
 const guidanceRoutes = require('./routes/guidanceRoutes');
+const stocksRoutes = require('./routes/stocksRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const portfolioRoutes = require('./routes/portfolioRoutes');
 
 const app = express();
 
@@ -26,6 +29,9 @@ app.use(express.static('frontend'));
 
 // API Routes
 app.use('/api/guidance', guidanceRoutes);
+app.use('/api/stocks', stocksRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/portfolio', portfolioRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({
