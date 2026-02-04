@@ -1,357 +1,374 @@
-const API_BASE_URL = 'http://localhost:5000/api';
+const { SUPABASE_URL, SUPABASE_ANON_KEY, API_BASE_URL } = window.APP_CONFIG;
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Global state management
-let currentUser = null;
-let guidancePanel = null;
+const state = {
+  session: null,
+  profile: null,
+  stocks: [],
+  quotes: new Map()
+};
 
-// Utility functions
-function getAuthToken() {
-    return localStorage.getItem('authToken') || 
-           sessionStorage.getItem('authToken') || 
-           getCookie('authToken');
-}
-
-function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) {
-        return parts.pop().split(';').shift();
-    }
-    return null;
-}
+const elements = {
+  systemStatus: document.getElementById('system-status'),
+  priceStatus: document.getElementById('price-status'),
+  loginForm: document.getElementById('login-form'),
+  signupForm: document.getElementById('signup-form'),
+  logoutBtn: document.getElementById('logout-btn'),
+  rolePill: document.getElementById('role-pill'),
+  walletBalance: document.getElementById('wallet-balance'),
+  guidanceSummary: document.getElementById('guidance-summary'),
+  stocksTable: document.getElementById('stocks-table'),
+  holdingsTable: document.getElementById('holdings-table'),
+  portfolioValue: document.getElementById('portfolio-value'),
+  portfolioGain: document.getElementById('portfolio-gain'),
+  addStockForm: document.getElementById('add-stock-form'),
+  adminStocksTable: document.getElementById('admin-stocks-table'),
+  activityTable: document.getElementById('activity-table'),
+  refreshStocks: document.getElementById('refresh-stocks'),
+  refreshPortfolio: document.getElementById('refresh-portfolio'),
+  refreshAdminStocks: document.getElementById('refresh-admin-stocks')
+};
 
 function formatCurrency(amount) {
-    return new Intl.NumberFormat('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    }).format(amount);
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(amount || 0);
 }
 
-function formatPercent(value) {
-    return `${(value >= 0 ? '+' : '')}${value.toFixed(2)}%`;
+function formatChange(change, percent) {
+  const sign = change >= 0 ? '+' : '';
+  return `${sign}${change.toFixed(2)} (${sign}${percent.toFixed(2)}%)`;
+}
+
+function setStatus(el, text, good) {
+  el.textContent = text;
+  el.className = good ? 'status-good' : 'status-bad';
+}
+
+async function apiFetch(path, options = {}) {
+  const headers = options.headers || {};
+  if (state.session?.access_token) {
+    headers.Authorization = `Bearer ${state.session.access_token}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...headers
+    }
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'Request failed');
+  }
+
+  return data;
 }
 
 async function checkSystemHealth() {
-    const statusElement = document.getElementById('system-status');
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/health`);
-        const data = await response.json();
-        
-        if (data.success) {
-            statusElement.textContent = 'Online';
-            statusElement.className = 'online';
-            console.log('System health check:', data);
-        } else {
-            statusElement.textContent = 'Error';
-            statusElement.className = 'offline';
-        }
-    } catch (error) {
-        console.error('Failed to check system health:', error);
-        statusElement.textContent = 'Offline';
-        statusElement.className = 'offline';
+  try {
+    const response = await fetch(`${API_BASE_URL}/health`);
+    const data = await response.json();
+    if (data.success) {
+      setStatus(elements.systemStatus, 'Online', true);
+    } else {
+      setStatus(elements.systemStatus, 'Unavailable', false);
     }
+  } catch (error) {
+    setStatus(elements.systemStatus, 'Offline', false);
+  }
 }
 
-async function initializeGuidancePanel() {
-    // Only initialize if user is authenticated
-    const token = getAuthToken();
-    if (!token) {
-        console.log('User not authenticated, skipping guidance panel');
-        return;
-    }
-
-    try {
-        // Verify token is still valid
-        const response = await fetch(`${API_BASE_URL}/auth/me`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
-        if (response.ok) {
-            const userData = await response.json();
-            currentUser = userData.data.user;
-            
-            // Initialize guidance panel
-            if (typeof GuidancePanel !== 'undefined') {
-                guidancePanel = new GuidancePanel('guidance-panel-container', {
-                    autoRefresh: true,
-                    refreshInterval: 60000, // 1 minute
-                    theme: 'light'
-                });
-                
-                console.log('AI Guidance Panel initialized for user:', currentUser.email);
-            } else {
-                console.warn('GuidancePanel class not found');
-            }
-        } else {
-            console.log('Invalid token, removing guidance panel');
-            clearAuthToken();
-        }
-    } catch (error) {
-        console.error('Error initializing guidance panel:', error);
-    }
-}
-
-function clearAuthToken() {
-    localStorage.removeItem('authToken');
-    sessionStorage.removeItem('authToken');
-    document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    currentUser = null;
-    
-    if (guidancePanel) {
-        guidancePanel.destroy();
-        guidancePanel = null;
-    }
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(panel => {
+    panel.classList.toggle('hidden', panel.id !== id);
+  });
 }
 
 function setupNavigation() {
-    // Add navigation event listeners
-    document.addEventListener('click', (e) => {
-        // Handle logout
-        if (e.target.matches('#logout-btn') || e.target.closest('#logout-btn')) {
-            e.preventDefault();
-            handleLogout();
-        }
-        
-        // Handle navigation
-        if (e.target.matches('nav a[href]')) {
-            const href = e.target.getAttribute('href');
-            if (href.startsWith('#')) {
-                e.preventDefault();
-                navigateToSection(href.substring(1));
-            }
-        }
+  document.querySelectorAll('[data-nav]').forEach(button => {
+    button.addEventListener('click', () => {
+      const target = button.getAttribute('data-nav')?.replace('#', '');
+      if (target) {
+        showPanel(target);
+      }
     });
+  });
+
+  document.querySelectorAll('nav a[href^="#"]').forEach(link => {
+    link.addEventListener('click', event => {
+      event.preventDefault();
+      const target = link.getAttribute('href').replace('#', '');
+      showPanel(target);
+    });
+  });
 }
 
-function navigateToSection(sectionId) {
-    // Hide all sections
-    const sections = document.querySelectorAll('main > section');
-    sections.forEach(section => {
-        section.style.display = 'none';
-    });
-    
-    // Show target section
-    const targetSection = document.getElementById(sectionId);
-    if (targetSection) {
-        targetSection.style.display = 'block';
-    }
+async function handleLogin(event) {
+  event.preventDefault();
+  const formData = new FormData(event.target);
+  const email = formData.get('email');
+  const password = formData.get('password');
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  state.session = data.session;
+  await loadProfile();
+  await refreshDashboard();
+}
+
+async function handleSignup(event) {
+  event.preventDefault();
+  const formData = new FormData(event.target);
+  const email = formData.get('email');
+  const password = formData.get('password');
+
+  const { error } = await supabaseClient.auth.signUp({ email, password });
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  alert('Signup successful. Check your email to confirm if required.');
 }
 
 async function handleLogout() {
-    try {
-        const token = getAuthToken();
-        if (token) {
-            await fetch(`${API_BASE_URL}/auth/logout`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-        }
-    } catch (error) {
-        console.error('Error during logout:', error);
-    } finally {
-        clearAuthToken();
-        // Redirect to login page or refresh
-        window.location.reload();
+  await supabaseClient.auth.signOut();
+  state.session = null;
+  state.profile = null;
+  elements.logoutBtn.classList.add('hidden');
+  showPanel('home');
+}
+
+async function loadProfile() {
+  const { data } = await apiFetch('/portfolio/me');
+  state.profile = data;
+  elements.rolePill.textContent = `Role: ${data.role}`;
+  elements.walletBalance.textContent = formatCurrency(data.virtual_balance);
+  elements.logoutBtn.classList.remove('hidden');
+  document.getElementById('admin').classList.toggle('hidden', data.role !== 'admin');
+  document.getElementById('dashboard').classList.remove('hidden');
+}
+
+async function loadStocks() {
+  const { data } = await apiFetch('/stocks');
+  state.stocks = data;
+}
+
+async function loadQuotes() {
+  if (!state.stocks.length) {
+    return;
+  }
+  try {
+    const symbols = state.stocks.map(stock => stock.symbol);
+    const { data } = await apiFetch(`/stocks/quotes?symbols=${symbols.join(',')}`);
+    state.quotes = new Map(data.map(quote => [quote.symbol, quote]));
+    setStatus(elements.priceStatus, 'Live', true);
+  } catch (error) {
+    setStatus(elements.priceStatus, 'Unavailable', false);
+  }
+}
+
+function renderStocks() {
+  elements.stocksTable.innerHTML = '';
+  state.stocks.forEach(stock => {
+    const quote = state.quotes.get(stock.symbol) || {};
+    const row = document.createElement('tr');
+    const change = quote.regularMarketChange || 0;
+    const percent = quote.regularMarketChangePercent || 0;
+    const tradeCell = state.profile?.role === 'admin'
+      ? '<span class="helper-text">Admin view only</span>'
+      : `
+        <div class="trade-actions">
+          <input type="number" min="1" placeholder="Qty" data-symbol="${stock.symbol}">
+          <button class="secondary-btn" data-action="buy" data-symbol="${stock.symbol}">Buy</button>
+          <button class="ghost-btn" data-action="sell" data-symbol="${stock.symbol}">Sell</button>
+        </div>
+      `;
+
+    row.innerHTML = `
+      <td>${stock.symbol}</td>
+      <td>${stock.name}</td>
+      <td>${formatCurrency(quote.regularMarketPrice || 0)}</td>
+      <td class="${change >= 0 ? 'status-good' : 'status-bad'}">${formatChange(change, percent)}</td>
+      <td>${tradeCell}</td>
+    `;
+    elements.stocksTable.appendChild(row);
+  });
+}
+
+async function handleTrade(event) {
+  const action = event.target.getAttribute('data-action');
+  if (!action) return;
+  if (state.profile?.role !== 'user') {
+    alert('Only users can trade.');
+    return;
+  }
+
+  const symbol = event.target.getAttribute('data-symbol');
+  const input = document.querySelector(`input[data-symbol="${symbol}"]`);
+  const quantity = Number(input?.value || 0);
+
+  if (!quantity || quantity <= 0) {
+    alert('Enter a valid quantity.');
+    return;
+  }
+
+  const endpoint = action === 'buy' ? '/portfolio/buy' : '/portfolio/sell';
+  await apiFetch(endpoint, {
+    method: 'POST',
+    body: JSON.stringify({ symbol, quantity })
+  });
+
+  input.value = '';
+  await refreshDashboard();
+}
+
+async function loadPortfolio() {
+  const { data } = await apiFetch('/portfolio');
+  elements.portfolioValue.textContent = formatCurrency(data.total_value);
+  elements.portfolioGain.textContent = formatCurrency(data.total_gain_loss);
+
+  elements.holdingsTable.innerHTML = '';
+  data.holdings.forEach(holding => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${holding.symbol}</td>
+      <td>${holding.quantity}</td>
+      <td>${formatCurrency(holding.avg_price)}</td>
+      <td>${formatCurrency(holding.current_price)}</td>
+      <td class="${holding.gain_loss >= 0 ? 'status-good' : 'status-bad'}">${formatCurrency(holding.gain_loss)}</td>
+    `;
+    elements.holdingsTable.appendChild(row);
+  });
+}
+
+async function loadGuidance() {
+  try {
+    const { data } = await apiFetch('/guidance/portfolio');
+    elements.guidanceSummary.innerHTML = `
+      <p><strong>Portfolio Insight:</strong> ${data.insights?.[0] || 'Stay diversified and monitor trends.'}</p>
+      <p><strong>Risk Level:</strong> ${data.risk_assessment?.riskLevel || 'Moderate'}</p>
+    `;
+  } catch (error) {
+    elements.guidanceSummary.innerHTML = `<p>Guidance unavailable: ${error.message}</p>`;
+  }
+}
+
+async function loadAdminStocks() {
+  const { data } = await apiFetch('/admin/stocks');
+  elements.adminStocksTable.innerHTML = '';
+  data.forEach(stock => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${stock.symbol}</td>
+      <td>${stock.name}</td>
+      <td>${stock.is_active ? 'Yes' : 'No'}</td>
+      <td>
+        <button class="ghost-btn" data-admin="toggle" data-id="${stock.id}" data-active="${stock.is_active}">
+          ${stock.is_active ? 'Disable' : 'Enable'}
+        </button>
+      </td>
+    `;
+    elements.adminStocksTable.appendChild(row);
+  });
+}
+
+async function loadActivity() {
+  const { data } = await apiFetch('/admin/activity');
+  elements.activityTable.innerHTML = '';
+  data.forEach(entry => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${entry.user_id.slice(0, 8)}...</td>
+      <td>${entry.symbol}</td>
+      <td>${entry.side}</td>
+      <td>${entry.quantity}</td>
+      <td>${formatCurrency(entry.price)}</td>
+    `;
+    elements.activityTable.appendChild(row);
+  });
+}
+
+async function handleAddStock(event) {
+  event.preventDefault();
+  const formData = new FormData(event.target);
+  const symbol = formData.get('symbol');
+  const name = formData.get('name');
+
+  await apiFetch('/admin/stocks', {
+    method: 'POST',
+    body: JSON.stringify({ symbol, name })
+  });
+
+  event.target.reset();
+  await loadAdminStocks();
+}
+
+async function handleAdminStockToggle(event) {
+  const button = event.target.closest('[data-admin="toggle"]');
+  if (!button) return;
+
+  const id = button.getAttribute('data-id');
+  const isActive = button.getAttribute('data-active') === 'true';
+
+  await apiFetch(`/admin/stocks/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ is_active: !isActive })
+  });
+
+  await loadAdminStocks();
+}
+
+async function refreshDashboard() {
+  if (!state.session) return;
+  await loadStocks();
+  await loadQuotes();
+  renderStocks();
+  await loadPortfolio();
+  await loadGuidance();
+
+  if (state.profile?.role === 'admin') {
+    await loadAdminStocks();
+    await loadActivity();
+  }
+}
+
+async function init() {
+  setupNavigation();
+  checkSystemHealth();
+
+  elements.loginForm.addEventListener('submit', handleLogin);
+  elements.signupForm.addEventListener('submit', handleSignup);
+  elements.logoutBtn.addEventListener('click', handleLogout);
+  elements.stocksTable.addEventListener('click', handleTrade);
+  elements.addStockForm.addEventListener('submit', handleAddStock);
+  elements.adminStocksTable.addEventListener('click', handleAdminStockToggle);
+  elements.refreshStocks.addEventListener('click', refreshDashboard);
+  elements.refreshPortfolio.addEventListener('click', loadPortfolio);
+  elements.refreshAdminStocks.addEventListener('click', loadAdminStocks);
+
+  const { data } = await supabaseClient.auth.getSession();
+  state.session = data.session;
+  if (state.session) {
+    await loadProfile();
+    await refreshDashboard();
+  }
+
+  setInterval(async () => {
+    if (state.session) {
+      await loadQuotes();
+      renderStocks();
+      await loadPortfolio();
     }
+  }, 20000);
 }
 
-function setupGlobalErrorHandling() {
-    // Global error handler for unhandled promises
-    window.addEventListener('unhandledrejection', (event) => {
-        console.error('Unhandled promise rejection:', event.reason);
-        
-        // Show user-friendly error message
-        showErrorMessage('An unexpected error occurred. Please try again.');
-    });
-
-    // Global error handler for JavaScript errors
-    window.addEventListener('error', (event) => {
-        console.error('Global error:', event.error);
-    });
-}
-
-function showErrorMessage(message) {
-    // Create or update error message element
-    let errorElement = document.getElementById('global-error');
-    if (!errorElement) {
-        errorElement = document.createElement('div');
-        errorElement.id = 'global-error';
-        errorElement.className = 'global-error-message';
-        errorElement.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #f8d7da;
-            color: #721c24;
-            padding: 12px 16px;
-            border-radius: 4px;
-            border: 1px solid #f5c6cb;
-            z-index: 1000;
-            max-width: 300px;
-        `;
-        document.body.appendChild(errorElement);
-    }
-    
-    errorElement.textContent = message;
-    errorElement.style.display = 'block';
-    
-    // Auto-hide after 5 seconds
-    setTimeout(() => {
-        errorElement.style.display = 'none';
-    }, 5000);
-}
-
-function showSuccessMessage(message) {
-    // Create or update success message element
-    let successElement = document.getElementById('global-success');
-    if (!successElement) {
-        successElement = document.createElement('div');
-        successElement.id = 'global-success';
-        successElement.className = 'global-success-message';
-        successElement.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #d4edda;
-            color: #155724;
-            padding: 12px 16px;
-            border-radius: 4px;
-            border: 1px solid #c3e6cb;
-            z-index: 1000;
-            max-width: 300px;
-        `;
-        document.body.appendChild(successElement);
-    }
-    
-    successElement.textContent = message;
-    successElement.style.display = 'block';
-    
-    // Auto-hide after 3 seconds
-    setTimeout(() => {
-        successElement.style.display = 'none';
-    }, 3000);
-}
-
-function setupKeyboardShortcuts() {
-    document.addEventListener('keydown', (e) => {
-        // Ctrl/Cmd + R: Refresh data (prevent page reload)
-        if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
-            e.preventDefault();
-            refreshCurrentView();
-        }
-        
-        // Escape: Close modals or dropdowns
-        if (e.key === 'Escape') {
-            closeAllModals();
-        }
-    });
-}
-
-function refreshCurrentView() {
-    // Refresh current page data
-    if (guidancePanel) {
-        guidancePanel.loadGuidanceData();
-    }
-    
-    // Refresh system health
-    checkSystemHealth();
-    
-    showSuccessMessage('Data refreshed successfully');
-}
-
-function closeAllModals() {
-    // Close any open modals
-    const modals = document.querySelectorAll('.modal, [style*="display: flex"]');
-    modals.forEach(modal => {
-        if (modal.classList.contains('modal') || modal.style.display === 'flex') {
-            modal.style.display = 'none';
-        }
-    });
-}
-
-function setupRealTimeUpdates() {
-    // Set up periodic updates for various components
-    setInterval(() => {
-        checkSystemHealth();
-        
-        // Update guidance panel if user is authenticated
-        if (guidancePanel && !guidancePanel.isLoading) {
-            guidancePanel.loadGuidanceData();
-        }
-    }, 30000); // 30 seconds
-
-    // More frequent updates for critical data (every 5 seconds)
-    setInterval(() => {
-        // Update any real-time stock prices or portfolio values
-        updateRealTimeData();
-    }, 5000);
-}
-
-function updateRealTimeData() {
-    // Update stock prices, portfolio values, etc.
-    const priceElements = document.querySelectorAll('.stock-price');
-    priceElements.forEach(element => {
-        // Simulate price updates (in real implementation, fetch from API)
-        const currentPrice = parseFloat(element.textContent.replace(/[$,]/g, ''));
-        const change = (Math.random() - 0.5) * 2; // Random change between -1 and 1
-        const newPrice = currentPrice + change;
-        
-        element.textContent = formatCurrency(newPrice);
-        
-        // Update color based on change
-        element.className = `stock-price ${change >= 0 ? 'positive' : 'negative'}`;
-    });
-}
-
-function initializeApp() {
-    console.log('AI-Powered Real-Time Stock Market System initialized');
-    
-    // Setup global error handling
-    setupGlobalErrorHandling();
-    
-    // Setup navigation
-    setupNavigation();
-    
-    // Setup keyboard shortcuts
-    setupKeyboardShortcuts();
-    
-    // Check system health
-    checkSystemHealth();
-    
-    // Initialize guidance panel if on appropriate page
-    if (document.getElementById('guidance-panel-container') || 
-        document.body.classList.contains('dashboard-page')) {
-        initializeGuidancePanel();
-    }
-    
-    // Setup real-time updates
-    setupRealTimeUpdates();
-    
-    // Show success message
-    console.log('✅ Application ready for use');
-}
-
-// Auto-initialize when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeApp);
-} else {
-    initializeApp();
-}
-
-// Export functions for use in other scripts
-window.StockMarketApp = {
-    checkSystemHealth,
-    initializeGuidancePanel,
-    handleLogout,
-    showErrorMessage,
-    showSuccessMessage,
-    formatCurrency,
-    formatPercent,
-    getAuthToken,
-    clearAuthToken
-};
+init();
